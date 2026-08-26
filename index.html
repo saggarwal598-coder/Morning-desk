@@ -366,7 +366,12 @@ function render(){
   document.getElementById('clockDate').textContent = ist.toLocaleDateString('en-IN', {weekday:'short', day:'numeric', month:'short'}) + ' · IST';
 
   // streak + progress
-  document.getElementById('streakText').textContent = `streak: ${state.streak}d`;
+  // state.streak = confirmed consecutive days as of the last day-rollover.
+  // If today is already fully checked, credit it immediately rather than
+  // waiting for tomorrow's rollover to notice.
+  const todayComplete = state.done.length >= SECTIONS.length;
+  const displayStreak = state.streak + (todayComplete ? 1 : 0);
+  document.getElementById('streakText').textContent = `streak: ${displayStreak}d`;
   document.getElementById('progressText').textContent = `${state.done.length}/${SECTIONS.length}`;
   document.getElementById('progressFill').style.width = (state.done.length/SECTIONS.length*100)+'%';
 
