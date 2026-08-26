@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Morning Desk</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#0A0D10;
+    --panel:#12161B;
+    --panel2:#171C22;
+    --border:#232A31;
+    --amber:#FFB300;
+    --amber-dim: #7A5A00;
+    --mint:#33D6A6;
+    --red:#FF5C5C;
+    --text:#E8E6DE;
+    --muted:#838B94;
+    --mono: 'JetBrains Mono', monospace;
+    --disp: 'Space Grotesk', sans-serif;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;background:var(--ink);color:var(--text);font-family:var(--disp);}
+  body{padding-bottom:60px;}
+  a{color:inherit;text-decoration:none;}
+
+  /* ---- Header ---- */
+  .header{
+    position:sticky; top:0; z-index:20;
+    background:linear-gradient(180deg, rgba(10,13,16,0.98) 80%, rgba(10,13,16,0));
+    padding:18px 18px 10px;
+    border-bottom:1px solid var(--border);
+  }
+  .header-top{display:flex; justify-content:space-between; align-items:flex-start;}
+  .eyebrow{
+    font-family:var(--mono); font-size:11px; letter-spacing:0.14em; text-transform:uppercase;
+    color:var(--amber); margin:0 0 4px;
+  }
+  h1{font-size:22px; margin:0; font-weight:700; letter-spacing:-0.01em;}
+  .clock-block{text-align:right;}
+  .clock{font-family:var(--mono); font-size:20px; color:var(--amber); font-weight:600; font-variant-numeric:tabular-nums;}
+  .clock-date{font-family:var(--mono); font-size:10px; color:var(--muted); margin-top:2px;}
+
+  .streak-row{
+    display:flex; align-items:center; gap:10px; margin-top:14px;
+    font-family:var(--mono); font-size:12px; color:var(--muted);
+  }
+  .streak-pill{
+    display:flex; align-items:center; gap:6px;
+    background:var(--panel); border:1px solid var(--border); border-radius:20px;
+    padding:5px 12px; color:var(--text);
+  }
+  .streak-flame{color:var(--amber);}
+  .progress-track{flex:1; height:4px; background:var(--panel2); border-radius:2px; overflow:hidden;}
+  .progress-fill{height:100%; background:var(--mint); transition:width .35s ease;}
+
+  /* ---- Session timeline (signature element) ---- */
+  .timeline{
+    display:flex; gap:3px; margin-top:14px; padding:0; list-style:none;
+  }
+  .tl-seg{
+    flex:1; height:26px; border-radius:4px; background:var(--panel);
+    border:1px solid var(--border);
+    position:relative; display:flex; align-items:center; justify-content:center;
+    font-family:var(--mono); font-size:9px; color:var(--muted); letter-spacing:0.05em;
+    transition:all .3s ease;
+  }
+  .tl-seg.done{background:rgba(51,214,166,0.12); border-color:rgba(51,214,166,0.4); color:var(--mint);}
+  .tl-seg.now{border-color:var(--amber); color:var(--amber); box-shadow:0 0 0 1px var(--amber) inset;}
+  .tl-seg.now::after{
+    content:''; position:absolute; bottom:-6px; left:50%; transform:translateX(-50%);
+    width:5px; height:5px; border-radius:50%; background:var(--amber);
+    box-shadow:0 0 6px var(--amber);
+  }
+
+  /* ---- Main ---- */
+  main{padding:20px 18px 0;}
+  .section{
+    background:var(--panel); border:1px solid var(--border); border-radius:10px;
+    margin-bottom:14px; overflow:hidden;
+  }
+  .section.now-active{border-color:var(--amber-dim);}
+  .sec-head{
+    display:flex; justify-content:space-between; align-items:center;
+    padding:14px 16px 10px;
+  }
+  .sec-head-left{display:flex; align-items:center; gap:10px;}
+  .sec-time{
+    font-family:var(--mono); font-size:10px; color:var(--amber);
+    background:rgba(255,179,0,0.08); border:1px solid var(--amber-dim);
+    padding:3px 7px; border-radius:4px; white-space:nowrap;
+  }
+  .sec-title{font-size:15px; font-weight:600;}
+  .sec-sub{font-family:var(--mono); font-size:11px; color:var(--muted); margin-top:1px;}
+  .check{
+    width:22px; height:22px; border-radius:50%; border:1.5px solid var(--border);
+    background:transparent; flex-shrink:0; cursor:pointer; position:relative;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .check.on{background:var(--mint); border-color:var(--mint);}
+  .check.on::after{content:'✓'; color:var(--ink); font-size:12px; font-weight:700;}
+
+  .links{padding:0 12px 14px; display:flex; flex-direction:column; gap:6px;}
+  .link-row{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:10px 12px; background:var(--panel2); border-radius:7px;
+    border:1px solid transparent;
+  }
+  .link-row:active{border-color:var(--amber-dim);}
+  .link-name{font-size:13.5px; font-weight:500;}
+  .link-tag{font-family:var(--mono); font-size:10px; color:var(--muted); margin-top:1px;}
+  .go{font-family:var(--mono); font-size:11px; color:var(--amber);}
+
+  .note{
+    font-family:var(--mono); font-size:11px; color:var(--muted); line-height:1.5;
+    padding:0 16px 14px;
+  }
+  .note b{color:var(--text);}
+
+  /* ---- Library (macro regime, no checkbox) ---- */
+  .lib-divider{
+    display:flex; align-items:center; gap:10px; margin:26px 0 12px;
+  }
+  .lib-divider .line{flex:1; height:1px; background:var(--border);}
+  .lib-divider .lib-label{
+    font-family:var(--mono); font-size:10px; letter-spacing:0.12em; text-transform:uppercase;
+    color:var(--muted);
+  }
+  .lib-intro{
+    font-family:var(--mono); font-size:11px; color:var(--muted); line-height:1.6;
+    margin-bottom:14px;
+  }
+  .lib-group{margin-bottom:12px;}
+  .lib-group-head{
+    display:flex; align-items:center; gap:8px; margin-bottom:8px;
+  }
+  .lib-cadence{
+    font-family:var(--mono); font-size:9.5px; letter-spacing:0.08em; text-transform:uppercase;
+    padding:3px 8px; border-radius:4px; border:1px solid var(--border); color:var(--muted);
+  }
+  .lib-cadence.daily{color:var(--mint); border-color:rgba(51,214,166,0.35); background:rgba(51,214,166,0.06);}
+  .lib-cadence.weekly{color:var(--amber); border-color:var(--amber-dim); background:rgba(255,179,0,0.06);}
+  .lib-cadence.monthly{color:var(--text); }
+  .lib-cadence.later{color:var(--red); border-color:rgba(255,92,92,0.35); background:rgba(255,92,92,0.06);}
+  .lib-links{display:flex; flex-direction:column; gap:6px;}
+  .lib-row{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:9px 12px; background:var(--panel); border:1px solid var(--border); border-radius:7px;
+  }
+  .lib-row-left{display:flex; flex-direction:column;}
+  .lib-name{font-size:13px; font-weight:500;}
+  .lib-tag{font-family:var(--mono); font-size:10px; color:var(--muted); margin-top:1px;}
+  .paid-pill{
+    font-family:var(--mono); font-size:9px; letter-spacing:0.05em; text-transform:uppercase;
+    color:var(--red); border:1px solid rgba(255,92,92,0.35); border-radius:4px; padding:2px 6px; margin-right:8px;
+  }
+  .free-hint{color:var(--muted); font-size:11px;}
+
+  footer{padding:22px 18px 10px; text-align:center; font-family:var(--mono); font-size:10.5px; color:var(--muted);}
+</style>
+</head>
+<body>
+
+  <div class="header">
+    <div class="header-top">
+      <div>
+        <p class="eyebrow">Session Console</p>
+        <h1>The Morning Desk</h1>
+      </div>
+      <div class="clock-block">
+        <div class="clock" id="clock">--:--:--</div>
+        <div class="clock-date" id="clockDate">IST</div>
+      </div>
+    </div>
+
+    <div class="streak-row">
+      <div class="streak-pill"><span class="streak-flame">●</span><span id="streakText">streak: 0d</span></div>
+      <div class="progress-track"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+      <span id="progressText">0/7</span>
+    </div>
+
+    <ul class="timeline" id="timeline"></ul>
+  </div>
+
+  <main id="main"></main>
+
+  <footer>The 7 blocks above are the daily rhythm — tap the ring to log one done, streak counts a day when all 7 are checked. The Macro Regime Library below is a rotating shelf, not a daily requirement.</footer>
+
+<script>
+const SECTIONS = [
+  {
+    id: 'print',
+    time: '6:30–6:50', label: 'Print', title: 'The Papers',
+    sub: 'Mint + Economic Times, cover to markets page',
+    links: [
+      {name:'Mint ePaper', tag:'epaper.livemint.com', url:'https://epaper.livemint.com/'},
+      {name:'Economic Times ePaper', tag:'epaper.economictimes.indiatimes.com', url:'https://epaper.economictimes.indiatimes.com/'}
+    ]
+  },
+  {
+    id: 'snapshot',
+    time: '6:50–7:00', label: 'Snapshot', title: 'Day in Ten Lines',
+    sub: 'What moved overnight, what opens today',
+    links: [
+      {name:'ET Markets', tag:'Live indices, movers, IPOs', url:'https://economictimes.indiatimes.com/markets'},
+      {name:'Moneycontrol', tag:'Markets homepage', url:'https://www.moneycontrol.com/'}
+    ]
+  },
+  {
+    id: 'macro',
+    time: '8:00 sharp', label: 'Plumbing', title: 'Money & Macro Dashboard',
+    sub: 'US close is in, Indian fixes are set — read the curve',
+    links: [
+      {name:'CME FedWatch', tag:'Market-implied Fed path', url:'https://www.cmegroup.com/markets/interest-rates/cme-fedwatch-tool.html'},
+      {name:'NY Fed SOFR Fixings', tag:'Daily overnight funding rate', url:'https://www.newyorkfed.org/markets/reference-rates/sofr'},
+      {name:'CNBC Bonds Dashboard', tag:'US 2Y / 5Y / 10Y / 30Y', url:'https://www.cnbc.com/bonds/'},
+      {name:'FBIL India', tag:'MIBOR + Adjusted MIFOR', url:'https://www.fbil.org.in/'}
+    ]
+  },
+  {
+    id: 'commute',
+    time: 'Commute', label: 'Explainer', title: 'One Story, Explained',
+    sub: 'The single Finshots piece for the day',
+    links: [
+      {name:'Finshots', tag:'One story, simply told', url:'https://finshots.in/'}
+    ]
+  },
+  {
+    id: 'deals',
+    time: 'Through the day', label: 'India Deals', title: 'Deals & Startups',
+    sub: 'Pick two, not all five — rotate through the week',
+    links: [
+      {name:'VCCircle', tag:'Every India PE/VC deal', url:'https://www.vccircle.com/'},
+      {name:'Entrackr', tag:'Startup funding, first', url:'https://entrackr.com/'},
+      {name:'The Ken', tag:'Operator-grade deep dives', url:'https://the-ken.com/'},
+      {name:'The Cap Table', tag:'Deal-desk reporting', url:'https://thecaptable.in/'},
+      {name:'Morning Context', tag:'Long-form business journalism', url:'https://morningcontext.com/'}
+    ]
+  },
+  {
+    id: 'global',
+    time: 'Evening', label: 'Global', title: 'Global Context',
+    sub: 'What Wall Street and global PE/VC did today',
+    links: [
+      {name:'DealBook (NYT)', tag:'Global M&A, free newsletter', url:'https://www.nytimes.com/section/business/dealbook'},
+      {name:'Term Sheet (Fortune)', tag:'Global PE/VC daily', url:'https://fortune.com/newsletter/termsheet/'},
+      {name:"Matt Levine — Money Stuff", tag:'Free on Bloomberg', url:'https://www.bloomberg.com/account/newsletters/money-stuff'}
+    ]
+  },
+  {
+    id: 'weekly',
+    time: 'Weekly', label: 'Deep Read', title: 'When He Writes, Just Read',
+    sub: 'No fixed day — check when you have 20 quiet minutes',
+    links: [
+      {name:"Damodaran's Blog", tag:'Musings on Markets', url:'https://aswathdamodaran.blogspot.com/'},
+      {name:'Marcellus Investment Managers', tag:'Free institutional thinking', url:'https://www.marcellus.in/blogs/'}
+    ]
+  }
+];
+
+// Macro regime library — reference shelf, not a daily checklist.
+// Rotate through this instead of trying to clear it every day.
+const LIBRARY = [
+  {
+    cadence: 'daily', cadenceLabel: 'Pick one, daily',
+    items: [
+      {name:'Money & Macro (YouTube)', tag:'Tony Yates, ex-BoE — plain-language monetary policy', paid:false, url:'https://www.youtube.com/@MoneyMacro'},
+      {name:'Doomberg', tag:'Finance, energy & macro risk, generous free tier', paid:false, url:'https://doomberg.substack.com/'}
+    ]
+  },
+  {
+    cadence: 'weekly', cadenceLabel: 'One episode, weekly',
+    items: [
+      {name:'Odd Lots (Bloomberg)', tag:'Markets + monetary policy + commodities, plain conversation', paid:false, url:'https://www.bloomberg.com/oddlots'},
+      {name:'Forward Guidance', tag:'Fed meetings, inflation, fiscal dominance', paid:false, url:'https://www.blockworks.co/forward-guidance'},
+      {name:'Hidden Forces', tag:'Markets, geopolitics, history — first hour free', paid:false, url:'https://hiddenforces.io/'},
+      {name:'Goldman Sachs Exchanges', tag:'In-house economists on macro & geopolitical risk', paid:false, url:'https://www.goldmansachs.com/insights/podcasts/goldman-sachs-exchanges'},
+      {name:'Noahpinion', tag:'Noah Smith — academic rigor, real-world debates', paid:false, url:'https://www.noahpinion.blog/'},
+      {name:"Tony Yates — long and variable", tag:'Deep-archive monetary policy blog', paid:false, url:'https://longandvariable.substack.com/'}
+    ]
+  },
+  {
+    cadence: 'monthly', cadenceLabel: 'One piece, monthly — the primary sources',
+    items: [
+      {name:'IMF Blog & World Economic Outlook', tag:'Sovereign debt, fiscal policy, capital flows', paid:false, url:'https://www.imf.org/en/blogs'},
+      {name:'BIS Quarterly Review', tag:'Central bank of central banks — plumbing & capital flows', paid:false, url:'https://www.bis.org/publ/quarterly_report.htm'},
+      {name:'World Gold Council — Gold Demand Trends', tag:'Precious metals ↔ macro & geopolitics', paid:false, url:'https://www.gold.org/goldhub/research/gold-demand-trends'},
+      {name:'Ray Dalio — How the Economic Machine Works', tag:'30-min primer on debt cycles', paid:false, url:'https://www.youtube.com/watch?v=PHe0bXAIuk0'},
+      {name:'Adam Tooze — Chartbook', tag:'Economics, geopolitics, history — deep archive', paid:false, url:'https://adamtooze.substack.com/'},
+      {name:'Net Interest', tag:'Banks, credit markets, financial plumbing', paid:false, url:'https://www.netinterest.co/'}
+    ]
+  },
+  {
+    cadence: 'later', cadenceLabel: 'Parked — revisit once the free layer feels thin',
+    items: [
+      {name:'Macro Anchor', tag:'Former central banker, weekly regime-shift deep dives', paid:true, url:'https://www.macroanchor.io/'},
+      {name:"Adam Tooze's paid tier", tag:'Extended geopolitics + economics coverage', paid:true, url:'https://adamtooze.substack.com/'}
+    ]
+  }
+];
+
+const STORAGE_KEY = 'morning-desk-progress';
+
+function todayIST(){
+  const now = new Date();
+  const ist = new Date(now.toLocaleString('en-US', {timeZone:'Asia/Kolkata'}));
+  return ist;
+}
+function dateStr(d){
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+}
+
+// crude IST-hour ranges for "active now" highlighting
+function activeSectionId(ist){
+  const h = ist.getHours() + ist.getMinutes()/60;
+  if (h >= 6.5 && h < 6.83) return 'print';
+  if (h >= 6.83 && h < 7.0) return 'snapshot';
+  if (h >= 7.0 && h < 7.42) return 'commute';
+  if (h >= 7.5 && h < 9.0) return 'macro';
+  if (h >= 9.0 && h < 18.0) return 'deals';
+  if (h >= 18.0 && h < 22.0) return 'global';
+  return 'weekly';
+}
+
+let state = { date: dateStr(todayIST()), done: [], streak: 0 };
+
+function loadState(){
+  try{
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw){
+      const parsed = JSON.parse(raw);
+      const today = dateStr(todayIST());
+      if (parsed.date !== today){
+        // day rolled over — settle yesterday's streak
+        const completedAll = parsed.done && parsed.done.length >= SECTIONS.length;
+        parsed.streak = completedAll ? (parsed.streak||0) + 1 : 0;
+        parsed.date = today;
+        parsed.done = [];
+      }
+      state = parsed;
+    }
+  } catch(e){ /* first run on this device/browser, no saved data yet */ }
+  render();
+}
+
+function saveState(){
+  try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
+  catch(e){ console.error('save failed — this browser may be blocking local storage', e); }
+}
+
+function toggle(id){
+  const i = state.done.indexOf(id);
+  if (i >= 0) state.done.splice(i,1); else state.done.push(id);
+  saveState();
+  render();
+}
+
+function render(){
+  const ist = todayIST();
+  const active = activeSectionId(ist);
+
+  // clock
+  document.getElementById('clock').textContent = ist.toLocaleTimeString('en-IN', {hour12:false});
+  document.getElementById('clockDate').textContent = ist.toLocaleDateString('en-IN', {weekday:'short', day:'numeric', month:'short'}) + ' · IST';
+
+  // streak + progress
+  document.getElementById('streakText').textContent = `streak: ${state.streak}d`;
+  document.getElementById('progressText').textContent = `${state.done.length}/${SECTIONS.length}`;
+  document.getElementById('progressFill').style.width = (state.done.length/SECTIONS.length*100)+'%';
+
+  // timeline
+  const tl = document.getElementById('timeline');
+  tl.innerHTML = SECTIONS.map(s => {
+    const cls = ['tl-seg'];
+    if (state.done.includes(s.id)) cls.push('done');
+    if (s.id === active) cls.push('now');
+    return `<li class="${cls.join(' ')}">${s.label}</li>`;
+  }).join('');
+
+  // main sections
+  const main = document.getElementById('main');
+  const sectionsHtml = SECTIONS.map(s => {
+    const isDone = state.done.includes(s.id);
+    const isActive = s.id === active;
+    return `
+    <div class="section ${isActive?'now-active':''}">
+      <div class="sec-head">
+        <div class="sec-head-left">
+          <div>
+            <div class="sec-time">${s.time}${isActive?' · NOW':''}</div>
+          </div>
+        </div>
+        <button class="check ${isDone?'on':''}" onclick="toggle('${s.id}')" aria-label="Mark ${s.title} done"></button>
+      </div>
+      <div style="padding:0 16px 8px;">
+        <div class="sec-title">${s.title}</div>
+        <div class="sec-sub">${s.sub}</div>
+      </div>
+      <div class="links">
+        ${s.links.map(l => `
+          <a class="link-row" href="${l.url}" target="_blank" rel="noopener">
+            <div>
+              <div class="link-name">${l.name}</div>
+              <div class="link-tag">${l.tag}</div>
+            </div>
+            <div class="go">OPEN →</div>
+          </a>
+        `).join('')}
+      </div>
+    </div>`;
+  }).join('');
+
+  const libHtml = `
+    <div class="lib-divider"><div class="line"></div><div class="lib-label">Macro Regime Library</div><div class="line"></div></div>
+    <div class="lib-intro">Not a daily block — a shelf to rotate through. Nothing here is paid unless flagged.</div>
+    ${LIBRARY.map(g => `
+      <div class="lib-group">
+        <div class="lib-group-head"><span class="lib-cadence ${g.cadence}">${g.cadenceLabel}</span></div>
+        <div class="lib-links">
+          ${g.items.map(it => `
+            <a class="lib-row" href="${it.url}" target="_blank" rel="noopener">
+              <div class="lib-row-left">
+                <div class="lib-name">${it.name}</div>
+                <div class="lib-tag">${it.tag}</div>
+              </div>
+              ${it.paid ? '<span class="paid-pill">Paid</span>' : '<span class="free-hint">Free</span>'}
+            </a>
+          `).join('')}
+        </div>
+      </div>
+    `).join('')}
+  `;
+
+  main.innerHTML = sectionsHtml + libHtml;
+}
+
+loadState();
+setInterval(render, 1000);
+</script>
+</body>
+</html>
